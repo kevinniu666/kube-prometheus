@@ -9,6 +9,63 @@ local kp =
   {
     _config+:: {
       namespace: 'monitoring',
+      versions+:: {
+              alertmanager: "v0.19.0",
+              nodeExporter: "v0.18.1",
+              kubeStateMetrics: "v1.8.0",
+              kubeRbacProxy: "v0.4.1",
+              prometheusOperator: "v0.33.0",
+              prometheus: "v2.13.1",
+          },
+
+          imageRepos+:: {
+              prometheus: "quay.io/prometheus/prometheus",
+              alertmanager: "quay.io/prometheus/alertmanager",
+              kubeStateMetrics: "quay.io/coreos/kube-state-metrics",
+              kubeRbacProxy: "quay.io/coreos/kube-rbac-proxy",
+              nodeExporter: "quay.io/prometheus/node-exporter",
+              prometheusOperator: "quay.io/coreos/prometheus-operator",
+          },
+
+          prometheus+:: {
+              names: 'k8s',
+              replicas: 2,
+              rules: {},
+          },
+
+          alertmanager+:: {
+            name: 'main',
+            config: |||
+              global:
+                resolve_timeout: 5m
+              route:
+                group_by: ['job']
+                group_wait: 30s
+                group_interval: 5m
+                repeat_interval: 12h
+                receiver: 'null'
+                routes:
+                - match:
+                    alertname: Watchdog
+                  receiver: 'null'
+              receivers:
+              - name: 'null'
+            |||,
+            replicas: 3,
+          },
+
+          kubeStateMetrics+:: {
+            collectors: '',  // empty string gets a default set
+            scrapeInterval: '30s',
+            scrapeTimeout: '30s',
+
+            baseCPU: '100m',
+            baseMemory: '150Mi',
+          },
+
+          nodeExporter+:: {
+            port: 9100,
+          },
     },
   };
 
